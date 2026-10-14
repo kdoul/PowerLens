@@ -16,7 +16,7 @@
 </p>
 
 <p align="center">
-  <a href="https://kdoul.github.io/PowerLens/">Website</a> ·
+  <a href="https://getpowerlens.eu">getpowerlens.eu</a> ·
   <a href="https://github.com/kdoul/PowerLens/releases/latest/download/PowerLens-win-x64.zip">Download (x64)</a> ·
   <a href="https://github.com/kdoul/PowerLens/releases/latest/download/PowerLens-win-arm64.zip">Download (ARM64)</a>
 </p>
