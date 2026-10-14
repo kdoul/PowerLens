@@ -62,6 +62,18 @@ public class AdapterEstimationTests
     }
 
     [Fact]
+    public void LowPowerWhileToppingOffIsNotSlow()
+    {
+        var est = new AdapterEstimator();
+        est.Add(At(0, ac: true, rateMw: 4_800, pct: 99));
+        Assert.Equal(ChargerVerdict.Charging, est.Assess().Verdict);
+
+        var low = new AdapterEstimator();
+        low.Add(At(0, ac: true, rateMw: 4_800, pct: 40));
+        Assert.Equal(ChargerVerdict.SlowCharging, low.Assess().Verdict);
+    }
+
+    [Fact]
     public void FullBatteryIsReportedAsFull()
     {
         var est = new AdapterEstimator();

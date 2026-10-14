@@ -22,7 +22,7 @@ public static class ReportFormatter
     };
 
     public static string Watts(double? w, string format = "0.0") =>
-        w is double v ? v.ToString(format, Inv) + " W" : "—";
+        w is double v ? v.ToString(format, CultureInfo.CurrentCulture) + " W" : "—";
 
     public static string Duration(TimeSpan? t) =>
         t is TimeSpan d ? (d.TotalHours >= 1 ? $"{(int)d.TotalHours} h {d.Minutes:00} min" : $"{d.Minutes} min") : "—";
@@ -100,7 +100,7 @@ public static class ReportFormatter
             yield return new(g, "Full charge capacity", b.Info is { } i1 ? $"{i1.FullChargedCapacity:N0} {unit}" : "—");
             yield return new(g, "Design capacity", b.Info is { } i2 ? $"{i2.DesignedCapacity:N0} {unit}" : "—");
             yield return new(g, "Health (full ÷ design)", b.HealthPercent is double h ? $"{h:0.0} %" : "—");
-            yield return new(g, "Cycle count", b.CycleCount?.ToString("N0", Inv) ?? "—");
+            yield return new(g, "Cycle count", b.CycleCount?.ToString("N0") ?? "—");
             yield return new(g, "Temperature", b.TemperatureC is double t ? $"{t:0.0} °C" : "Not reported");
             yield return new(g, "Estimated time remaining", Duration(b.EstimatedTime));
             yield return new(g, "Chemistry", b.Info?.Chemistry ?? "—");
@@ -189,7 +189,7 @@ public static class ReportFormatter
     }
 
     private static string SignedWatts(double? w) =>
-        w is double v ? (v > 0 ? "+" : "") + v.ToString("0.00", Inv) + " W" : "—";
+        w is double v ? (v > 0 ? "+" : "") + v.ToString("0.00", CultureInfo.CurrentCulture) + " W" : "—";
 
     private static string DescribeState(BatteryPowerState? state)
     {

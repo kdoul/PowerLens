@@ -21,6 +21,10 @@
   <a href="https://github.com/kdoul/PowerLens/releases/latest/download/PowerLens-win-arm64.zip">Download (ARM64)</a>
 </p>
 
+<p align="center">
+  <img src="docs/screenshot.webp" width="820" alt="PowerLens on Windows 11">
+</p>
+
 Think coconutBattery, for Windows. PowerLens shows your battery's health, cycle count and live power, and
 measures how much power your USB-C charger is supplying. On Windows 11 22H2 and later the window uses
 the system **acrylic** backdrop and follows the light/dark theme; earlier versions get solid colours.

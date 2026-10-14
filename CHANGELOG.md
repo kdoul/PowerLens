@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.1 — 2026-10-14
+
+- The power adapter tile now leads with the likely charger rating (e.g. "60 W") instead of the
+  momentary draw, which can be just a few watts while the battery tops off.
+- No more "Charging slowly" above 80 % battery, where laptops deliberately slow charging.
+- Watts and other numbers follow the Windows number format everywhere (e.g. "5,3 W" in German).
+
 ## 0.1.0 — 2026-10-14
 
 First public release.

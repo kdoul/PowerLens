@@ -7,7 +7,7 @@
   <meta name="description" content="PowerLens is a free, open-source battery and charger inspector for Windows 10 and 11. See battery health, cycle count and live power, and find out how many watts your USB-C charger really delivers.">
   <meta property="og:title" content="PowerLens — battery & USB-C charger inspector for Windows">
   <meta property="og:description" content="Battery health, cycle count, live power, and an honest measurement of your USB-C charger's wattage.">
-  <meta property="og:image" content="https://kdoul.github.io/PowerLens/icon.png">
+  <meta property="og:image" content="https://kdoul.github.io/PowerLens/screenshot.webp">
   <link rel="icon" href="favicon.png" type="image/png">
   <style>
     :root {
@@ -118,27 +118,8 @@
     .meta { margin-top: 16px; font-size: 14px; color: var(--muted); }
     .meta a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
 
-    /* App illustration */
-    .window {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow);
-      backdrop-filter: blur(24px) saturate(1.3); -webkit-backdrop-filter: blur(24px) saturate(1.3);
-      overflow: hidden;
-    }
-    .titlebar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; font-size: 12px; color: var(--muted); }
-    .titlebar img { width: 16px; height: 16px; }
-    .titlebar .ctl { margin-left: auto; display: flex; gap: 18px; letter-spacing: 2px; }
-    .panes { display: grid; grid-template-columns: 1.4fr 1fr; gap: 10px; padding: 4px 12px 12px; }
-    .card { background: var(--surface-strong); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
-    .card .cap { font-size: 10px; font-weight: 700; letter-spacing: .06em; color: var(--muted); }
-    .card .big { font-family: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif; font-size: 30px; font-weight: 650; line-height: 1.2; }
-    .card .sub { font-size: 12px; }
-    .card .tiny { font-size: 11px; color: var(--muted); }
-    .pill { display: inline-block; margin-top: 8px; font-size: 11px; font-weight: 700; color: #fff; background: #16a34a; padding: 2px 9px; border-radius: 999px; }
-    .level { height: 5px; border-radius: 3px; background: var(--code-bg); margin: 4px 0 8px; overflow: hidden; }
-    .level span { display: block; height: 100%; width: 76%; background: var(--accent); border-radius: 3px; }
-    .chart { grid-column: 1 / -1; padding: 10px 12px 6px; }
-    .chart svg { width: 100%; height: auto; display: block; }
-    .caption-note { text-align: center; font-size: 12px; color: var(--muted); margin-top: 10px; }
+    /* Screenshot */
+    .shot { display: block; width: 100%; height: auto; border-radius: 12px; box-shadow: var(--shadow); }
 
     /* Sections */
     section { padding: 56px 0; }
@@ -197,7 +178,6 @@
     @media (max-width: 600px) {
       nav .links a:not(.gh) { display: none; }
       .grid, .steps, .download { grid-template-columns: 1fr; }
-      .panes { grid-template-columns: 1fr; }
       .lede { font-size: 17px; }
       footer .right { margin-left: 0; }
     }
@@ -237,42 +217,8 @@
     </div>
 
     <div>
-      <div class="window" aria-label="Illustration of the PowerLens window">
-        <div class="titlebar"><img src="icon.png" alt="">PowerLens — battery &amp; charger<span class="ctl">–&nbsp;▢&nbsp;✕</span></div>
-        <div class="panes">
-          <div class="card">
-            <div class="cap">POWER ADAPTER</div>
-            <div class="big">41.6 W</div>
-            <div class="sub">Being delivered now, consistent with a 45 W charger or larger</div>
-            <div class="tiny">Peak 43.2 W · Medium confidence</div>
-            <span class="pill">Charging</span>
-          </div>
-          <div class="card">
-            <div class="cap">BATTERY</div>
-            <div class="big">76 %</div>
-            <div class="level"><span></span></div>
-            <div class="sub">Charging at 29.4 W</div>
-            <div class="tiny">Health 92 % · 214 cycles</div>
-          </div>
-          <div class="card chart">
-            <svg viewBox="0 0 400 110" role="img" aria-label="Power over the last 10 minutes">
-              <rect x="150" y="6" width="250" height="88" fill="var(--accent)" opacity=".10"/>
-              <g stroke="var(--border)" stroke-width="1">
-                <line x1="0" y1="20" x2="400" y2="20"/><line x1="0" y1="50" x2="400" y2="50"/><line x1="0" y1="80" x2="400" y2="80"/>
-              </g>
-              <polyline fill="none" stroke="var(--green)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"
-                points="0,86 20,87 40,85 60,88 80,86 100,87 120,86 140,87"/>
-              <polyline fill="none" stroke="var(--green)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"
-                points="155,50 175,40 195,38 215,37 235,38 255,36 275,37 295,38 315,37 335,38 355,39 375,38 395,39"/>
-              <polyline fill="none" stroke="var(--blue)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"
-                points="155,34 175,25 195,23 215,22 235,23 255,21 275,22 295,23 315,22 335,23 355,24 375,23 395,24"/>
-              <text x="0" y="106" font-size="9" fill="var(--muted)">−10 min</text>
-              <text x="380" y="106" font-size="9" fill="var(--muted)">now</text>
-            </svg>
-          </div>
-        </div>
-      </div>
-      <p class="caption-note">Illustration. On Windows 11 the real window uses the acrylic backdrop and follows your theme.</p>
+      <img class="shot" src="screenshot.webp" width="1574" height="982"
+           alt="PowerLens window on Windows 11 with the acrylic backdrop, showing the power adapter, battery, live chart and charger details">
     </div>
   </div>
 

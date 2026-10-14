@@ -153,7 +153,8 @@ public sealed class AdapterEstimator
         }
         else
         {
-            verdict = input is { Watts: < 20 } ? ChargerVerdict.SlowCharging : ChargerVerdict.Charging;
+            // Above ~80 % laptops taper charging on purpose, so low power there isn't a slow charger.
+            verdict = input is { Watts: < 20 } && s.ChargePercent is not >= 80 ? ChargerVerdict.SlowCharging : ChargerVerdict.Charging;
         }
 
         if (baseline is null && rate is not null)

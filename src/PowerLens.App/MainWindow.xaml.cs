@@ -208,15 +208,23 @@ public partial class MainWindow : Window
             return;
         }
 
+        // Lead with the likely charger rating: it stays meaningful even when the laptop is only
+        // trickle-charging near full and drawing a few watts.
+        if (a.LikelyChargerClass is { } likely)
+        {
+            AdapterWatts.Text = likely.Label;
+            AdapterCaption.Text = $"Likely charger rating (or higher) · {likely.Description}";
+            AdapterDetail.Text =
+                $"Delivering {ReportFormatter.Watts(a.EstimatedInputWatts)} now  ·  peak {ReportFormatter.Watts(a.PeakInputWatts)}  ·  {a.Confidence} confidence" +
+                (a.InputIsLowerBound ? "  ·  charge power only" : "");
+            return;
+        }
+
         if (a.EstimatedInputWatts is double input)
         {
-            AdapterWatts.Text = $"{input:0.0} W";
-            AdapterCaption.Text = a.LikelyChargerClass is { } c
-                ? $"Being delivered now — consistent with a {c.Label} charger or larger"
-                : "Being delivered by the charger now (estimated)";
-            AdapterDetail.Text =
-                $"Peak {ReportFormatter.Watts(a.PeakInputWatts)}  ·  {a.Confidence} confidence" +
-                (a.InputIsLowerBound ? "  ·  charge power only (lower bound)" : "");
+            AdapterWatts.Text = ReportFormatter.Watts(input);
+            AdapterCaption.Text = "Being delivered by the charger now (estimated)";
+            AdapterDetail.Text = $"{a.Confidence} confidence" + (a.InputIsLowerBound ? "  ·  charge power only (lower bound)" : "");
             return;
         }
 
