@@ -3,6 +3,9 @@
 A coconutBattery-style battery and charger inspector for Windows 10 and 11, focused on one question:
 **how many watts is my USB-C charger actually delivering?**
 
+On Windows 11 22H2 and later the window uses the system **acrylic** backdrop and follows the light/dark
+theme. Earlier versions get solid colours.
+
 - **Charger card:** the reported charger rating when Windows exposes it. Otherwise, an estimate of the
   power coming from the charger now, the peak since it was plugged in, and the smallest standard
   USB-C/PD rating that fits (for example "consistent with a 45 W charger or larger").
@@ -14,6 +17,12 @@ A coconutBattery-style battery and charger inspector for Windows 10 and 11, focu
   accurate charger estimate the hardware allows.
 - **Raw data:** every IOCTL result, the `root\WMI` battery classes, and any vendor WMI classes that
   look charger-related. You can copy or save it as a text report.
+- **System tray:** an optional tray icon that shows the live battery wattage (green while charging,
+  slate while discharging, red when the charger is too weak). Its menu has status lines and quick
+  settings: watts in the icon, close-to-tray, and Start with Windows.
+- **Settings tab:** the same options. Settings are saved to `%APPDATA%\PowerLens\settings.json`.
+  Start with Windows uses the per-user Run key and launches into the tray with `--tray`.
+- **Single instance:** launching PowerLens again brings the running window to the front.
 - **CLI** (`powerlens-cli`): text report, `--json`, or `--watch` for a live line every 2 s.
 
 No admin rights needed.
@@ -52,6 +61,15 @@ Otherwise PowerLens measures what the charger is delivering:
 - If the battery drains while plugged in, the status shows **Charger too weak**. This is typical
   for phone chargers or non-PD sources.
 
+### How Windows decides a charger is "slow"
+
+Windows doesn't measure this itself. The laptop's embedded controller compares the negotiated USB-PD
+contract with what the machine needs and reports a charging status of nominal, slow, very slow or not
+charging. On most laptops it does this through UCSI `GET_CONNECTOR_STATUS`. Windows only turns that
+flag into the "Slow charger" / "PC isn't charging" notification. No public user-mode API exposes the
+flag, so PowerLens shows its own verdict from measured power: **Charging slowly** (under 20 W
+delivered) or **Charger too weak** (the battery drains while plugged in).
+
 ## Build
 
 You need the [.NET 10 SDK](https://dotnet.microsoft.com/download). It builds on Windows, macOS, or Linux (`EnableWindowsTargeting`).
@@ -80,7 +98,8 @@ For Snapdragon / ARM64 Windows laptops, use `-r win-arm64`.
 
 ```
 src/PowerLens.Core   battery IOCTL + WMI readers, struct decoding, charger estimator, adapter test (net10.0)
-src/PowerLens.App    WinForms UI (net10.0-windows)
+src/PowerLens.App    WPF UI with acrylic backdrop and tray icon (net10.0-windows)
 src/PowerLens.Cli    console report / --json / --watch (net10.0-windows)
 tests/               xUnit tests for decoding and estimation logic (run on any OS)
+tools/IconGen        renders the app icon (SkiaSharp): dotnet run --project tools/IconGen
 ```

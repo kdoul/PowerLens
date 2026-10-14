@@ -3,15 +3,28 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <!-- Only for NotifyIcon (system tray); the UI itself is WPF. -->
     <UseWindowsForms>true</UseWindowsForms>
     <AssemblyName>PowerLens</AssemblyName>
     <RootNamespace>PowerLens.App</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
-    <ApplicationVisualStyles>true</ApplicationVisualStyles>
-    <ApplicationDefaultFont>Segoe UI, 9.75pt</ApplicationDefaultFont>
+    <ApplicationIcon>Assets\PowerLens.ico</ApplicationIcon>
     <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <!-- WFO0003 is a WinForms hint; WPF takes its per-monitor DPI setting from app.manifest. -->
+    <NoWarn>$(NoWarn);WFO0003</NoWarn>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- WPF and WinForms share type names (Application, Clipboard, …); keep WinForms explicit. -->
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\PowerLens.ico" />
+    <Resource Include="Assets\PowerLens.png" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\PowerLens.Core\PowerLens.Core.csproj" />
