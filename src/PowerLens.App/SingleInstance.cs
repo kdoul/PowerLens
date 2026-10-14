@@ -21,9 +21,18 @@ internal sealed class SingleInstance : IDisposable
     [DllImport("user32.dll")]
     private static extern bool AllowSetForegroundWindow(int processId);
 
-    public SingleInstance()
+    /// <param name="waitForPrevious">
+    /// After an update the old version may still be shutting down; wait for it instead of
+    /// treating this launch as a duplicate.
+    /// </param>
+    public SingleInstance(bool waitForPrevious = false)
     {
         _mutex = new Mutex(initiallyOwned: true, MutexName, out bool created);
+        if (!created && waitForPrevious)
+        {
+            try { created = _mutex.WaitOne(TimeSpan.FromSeconds(20)); }
+            catch (AbandonedMutexException) { created = true; } // Previous process exited without releasing.
+        }
         IsFirst = created;
         if (IsFirst)
             _activate = new EventWaitHandle(false, EventResetMode.AutoReset, ActivateEventName);

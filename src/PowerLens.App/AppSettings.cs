@@ -13,6 +13,8 @@ internal sealed class AppSettings
     public bool ShowTrayIcon { get; set; } = true;
     public bool TrayShowsWatts { get; set; } = true;
     public bool CloseToTray { get; set; }
+    public bool CheckForUpdates { get; set; } = true;
+    public DateTimeOffset? LastUpdateCheck { get; set; }
 
     public static AppSettings Load()
     {

@@ -34,6 +34,8 @@ the system **acrylic** backdrop and follows the light/dark theme; earlier versio
 1. Download **PowerLens-win-x64.zip** (Intel/AMD) or **PowerLens-win-arm64.zip** (Snapdragon/ARM) from the
    [latest release](https://github.com/kdoul/PowerLens/releases/latest).
 2. Extract it and run `PowerLens.exe`. Nothing is installed, and no admin rights are needed.
+3. PowerLens checks GitHub for new releases and offers to update itself: it downloads the zip for your
+   PC, verifies it against the release's `SHA256SUMS.txt`, replaces its exe and restarts.
 
 PowerLens isn't code-signed yet, so SmartScreen may show "Windows protected your PC" on first launch.
 Choose **More info → Run anyway**. Every release is built from this repository by
@@ -58,6 +60,8 @@ Choose **More info → Run anyway**. Every release is built from this repository
 - **Settings tab:** the same options. Settings are saved to `%APPDATA%\PowerLens\settings.json`.
   Start with Windows uses the per-user Run key and launches into the tray with `--tray`.
 - **Single instance:** launching PowerLens again brings the running window to the front.
+- **Updates:** checks GitHub releases daily (optional) and updates itself in place after verifying the
+  download's SHA-256 checksum. Also available from the tray menu.
 - **CLI** (`powerlens-cli`): text report, `--json`, or `--watch` for a live line every 2 s.
 
 No admin rights needed.
@@ -106,7 +110,9 @@ delivered) or **Charger too weak** (the battery drains while plugged in).
 
 ## Privacy
 
-PowerLens makes no network connections. Settings are stored locally in `%APPDATA%\PowerLens`.
+PowerLens's only network access is the update check: about once a day it asks the GitHub API for this
+repository's latest release (a plain request with no data about your PC). You can turn it off under
+**Settings → Check for updates automatically**. Settings are stored locally in `%APPDATA%\PowerLens`.
 
 ## Build from source
 

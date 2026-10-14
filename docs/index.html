@@ -288,7 +288,7 @@
   <section id="download">
     <div class="wrap">
       <h2>Get PowerLens</h2>
-      <p class="section-lede">A single portable app. Unzip it anywhere and run it; uninstalling is just deleting the folder.</p>
+      <p class="section-lede">A single portable app. Unzip it anywhere and run it; it keeps itself up to date, and uninstalling is just deleting the folder.</p>
       <div class="download">
         <div class="tile">
           <h3>Download</h3>
@@ -329,6 +329,10 @@
         <p>Windows doesn't measure it. The laptop's controller compares the agreed charger power with what the machine needs and flags the connection as slow or not charging; Windows only shows the notification. That flag isn't available to apps, so PowerLens gives its own verdict: <strong>Charging slowly</strong> under 20 W delivered, or <strong>Charger too weak</strong> when the battery drains while plugged in.</p>
       </details>
       <details>
+        <summary>How do updates work?</summary>
+        <p>PowerLens checks GitHub for new releases and shows a bar when one is available. Click <strong>Update now</strong>: it downloads the package for your PC, verifies its SHA-256 checksum, replaces itself and restarts. Your settings are kept.</p>
+      </details>
+      <details>
         <summary>Which Windows versions are supported?</summary>
         <p>Windows 10 and 11, on x64 and ARM64. The acrylic window style needs Windows 11 22H2 or later; older versions use solid colours.</p>
       </details>
@@ -338,7 +342,7 @@
       </details>
       <details>
         <summary>Does it send any data anywhere?</summary>
-        <p>No. PowerLens makes no network connections. Everything stays on your PC.</p>
+        <p>No data about your PC. The only network request is the update check: about once a day PowerLens asks GitHub whether a newer release exists. You can turn that off in Settings.</p>
       </details>
     </div>
   </section>

@@ -1,5 +1,7 @@
 using System.ComponentModel;
 using System.IO;
+using System.Net.Http;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Threading;
 using Microsoft.Win32;
@@ -18,6 +20,10 @@ public partial class MainWindow : Window
     private readonly RowsModel _raw = new();
     private readonly AppSettings _settings;
     private TrayIcon? _tray;
+    private readonly Updater _updater = new();
+    private readonly DispatcherTimer _updateTimer = new() { Interval = TimeSpan.FromHours(1) };
+    private string? _dismissedUpdate;
+    private bool _updating;
     private PowerSnapshot? _last;
     private bool _refreshing;
     private bool _acrylic;
@@ -41,6 +47,11 @@ public partial class MainWindow : Window
 
         // Monitoring starts right away, even when launched hidden in the tray.
         _ = StartMonitoringAsync();
+
+        UpdateStatus.Text = $"You have version {UpdateChecker.Display(UpdateChecker.CurrentVersion)}.";
+        _updateTimer.Tick += async (_, _) => await AutoCheckForUpdatesAsync();
+        _updateTimer.Start();
+        _ = DelayedFirstUpdateCheckAsync();
     }
 
     /// <summary>Shows the window (from the tray or a second launch) and brings it to the front.</summary>
@@ -70,6 +81,7 @@ public partial class MainWindow : Window
         if (_exiting) return;
         _exiting = true;
         _timer.Stop();
+        _updateTimer.Stop();
         SystemEvents.PowerModeChanged -= OnPowerModeChanged;
         SystemEvents.UserPreferenceChanged -= OnUserPreferenceChanged;
         _tray?.Dispose();
@@ -87,7 +99,19 @@ public partial class MainWindow : Window
             _tray.OpenRequested += () => Dispatcher.BeginInvoke(ShowFromTray);
             _tray.ExitRequested += () => Dispatcher.BeginInvoke(ExitApp);
             _tray.SettingsChanged += () => Dispatcher.BeginInvoke(SyncSettingsUi);
+            _tray.UpdateRequested += () => Dispatcher.BeginInvoke(async () =>
+            {
+                ShowFromTray();
+                await UpdateNowAsync();
+            });
+            _tray.CheckForUpdatesRequested += () => Dispatcher.BeginInvoke(async () =>
+            {
+                ShowFromTray();
+                Tabs.SelectedItem = SettingsTab;
+                await CheckForUpdatesAsync(manual: true);
+            });
             if (_last is { } s) _tray.Update(s);
+            _tray.ShowUpdate(_updater.Available);
         }
         if (_tray is not null) _tray.Visible = _settings.ShowTrayIcon;
         SyncSettingsUi();
@@ -101,6 +125,7 @@ public partial class MainWindow : Window
         SettingCloseToTray.IsChecked = _settings.CloseToTray;
         SettingCloseToTray.IsEnabled = _settings.ShowTrayIcon;
         SettingStartup.IsChecked = StartupRegistration.IsEnabled;
+        SettingUpdates.IsChecked = _settings.CheckForUpdates;
         if (_tray is not null && _last is { } s) _tray.Update(s);
     }
 
@@ -109,11 +134,123 @@ public partial class MainWindow : Window
         _settings.ShowTrayIcon = SettingTray.IsChecked == true;
         _settings.TrayShowsWatts = SettingTrayWatts.IsChecked == true;
         _settings.CloseToTray = SettingCloseToTray.IsChecked == true;
+        _settings.CheckForUpdates = SettingUpdates.IsChecked == true;
         if (ReferenceEquals(sender, SettingStartup))
             StartupRegistration.Set(SettingStartup.IsChecked == true);
         _settings.Save();
         ApplySettings();
     }
+
+    // ---- Updates ------------------------------------------------------------------------------
+
+    private async Task DelayedFirstUpdateCheckAsync()
+    {
+        await Task.Delay(TimeSpan.FromSeconds(15)); // Let startup settle first.
+        await AutoCheckForUpdatesAsync();
+    }
+
+    private async Task AutoCheckForUpdatesAsync()
+    {
+        if (!_settings.CheckForUpdates || _updating) return;
+        if (_settings.LastUpdateCheck is { } last && DateTimeOffset.Now - last < TimeSpan.FromHours(20) && _updater.Available is null)
+            return;
+        await CheckForUpdatesAsync(manual: false);
+    }
+
+    private async Task CheckForUpdatesAsync(bool manual)
+    {
+        if (_updating) return;
+        string current = UpdateChecker.Display(UpdateChecker.CurrentVersion);
+        CheckUpdatesButton.IsEnabled = false;
+        UpdateStatus.Text = "Checking…";
+        try
+        {
+            var release = await _updater.CheckAsync();
+            _settings.LastUpdateCheck = DateTimeOffset.Now;
+            _settings.Save();
+            if (manual) _dismissedUpdate = null;
+            ShowUpdate(release);
+            UpdateStatus.Text = release is null
+                ? $"You're up to date (version {current})."
+                : $"Version {UpdateChecker.Display(release.Version)} is available (you have {current}).";
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException)
+        {
+            UpdateStatus.Text = $"Couldn't check for updates: {ex.Message}";
+        }
+        finally
+        {
+            CheckUpdatesButton.IsEnabled = true;
+        }
+    }
+
+    private void ShowUpdate(ReleaseInfo? release)
+    {
+        _tray?.ShowUpdate(release);
+        if (release is null)
+        {
+            UpdateBar.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        string version = UpdateChecker.Display(release.Version);
+        UpdateBarText.Text = $"PowerLens {version} is available. You have {UpdateChecker.Display(UpdateChecker.CurrentVersion)}.";
+        UpdateNowButton.Content = Updater.CanUpdateInPlace ? "Update now" : "Download";
+        UpdateBar.Visibility = _dismissedUpdate == version ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private async void OnUpdateNow(object sender, RoutedEventArgs e) => await UpdateNowAsync();
+
+    private async Task UpdateNowAsync()
+    {
+        if (_updater.Available is not { } release || _updating) return;
+        if (!Updater.CanUpdateInPlace)
+        {
+            Updater.OpenInBrowser(release.HtmlUrl.Length > 0 ? release.HtmlUrl : UpdateChecker.ReleasesPage);
+            return;
+        }
+
+        string version = UpdateChecker.Display(release.Version);
+        _updating = true;
+        UpdateBar.Visibility = Visibility.Visible;
+        UpdateNowButton.IsEnabled = UpdateLaterButton.IsEnabled = false;
+        UpdateBarProgress.Value = 0;
+        UpdateBarProgress.Visibility = Visibility.Visible;
+        UpdateBarText.Text = $"Downloading PowerLens {version}…";
+        try
+        {
+            var progress = new Progress<double>(p =>
+            {
+                UpdateBarProgress.Value = p;
+                UpdateBarText.Text = $"Downloading PowerLens {version}… {p:P0}";
+            });
+            string staged = await _updater.DownloadAsync(release, progress);
+            UpdateBarText.Text = $"Installing PowerLens {version}…";
+            Updater.ApplyAndRestart(staged, startInTray: !IsVisible);
+            ExitApp();
+        }
+        catch (Exception ex)
+        {
+            UpdateBarText.Text = ex is UnauthorizedAccessException
+                ? "PowerLens can't replace its own files in this folder. Use \"What's new\" to download the update manually."
+                : $"Update failed: {ex.Message}";
+            UpdateBarProgress.Visibility = Visibility.Collapsed;
+            UpdateNowButton.Content = "Try again";
+            UpdateNowButton.IsEnabled = UpdateLaterButton.IsEnabled = true;
+            _updating = false;
+        }
+    }
+
+    private void OnReleaseNotes(object sender, RoutedEventArgs e) =>
+        Updater.OpenInBrowser(_updater.Available?.HtmlUrl is { Length: > 0 } url ? url : UpdateChecker.ReleasesPage);
+
+    private void OnUpdateLater(object sender, RoutedEventArgs e)
+    {
+        if (_updater.Available is { } release) _dismissedUpdate = UpdateChecker.Display(release.Version);
+        UpdateBar.Visibility = Visibility.Collapsed;
+    }
+
+    private async void OnCheckUpdates(object sender, RoutedEventArgs e) => await CheckForUpdatesAsync(manual: true);
 
     private async Task StartMonitoringAsync()
     {

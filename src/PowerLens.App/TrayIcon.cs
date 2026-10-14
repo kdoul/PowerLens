@@ -28,6 +28,11 @@ internal sealed class TrayIcon : IDisposable
     public event Action? OpenRequested;
     public event Action? ExitRequested;
     public event Action? SettingsChanged;
+    public event Action? UpdateRequested;
+    public event Action? CheckForUpdatesRequested;
+
+    private readonly Forms.ToolStripMenuItem _update = new() { Visible = false };
+    private string? _announcedVersion;
 
     [DllImport("user32.dll")]
     private static extern bool DestroyIcon(IntPtr handle);
@@ -47,16 +52,21 @@ internal sealed class TrayIcon : IDisposable
 
         var open = new Forms.ToolStripMenuItem("Open PowerLens") { Font = new Font(Forms.SystemInformation.MenuFont, FontStyle.Bold) };
         open.Click += (_, _) => OpenRequested?.Invoke();
+        _update.Click += (_, _) => UpdateRequested?.Invoke();
+        var checkUpdates = new Forms.ToolStripMenuItem("Check for updates");
+        checkUpdates.Click += (_, _) => CheckForUpdatesRequested?.Invoke();
+
         var exit = new Forms.ToolStripMenuItem("Exit");
         exit.Click += (_, _) => ExitRequested?.Invoke();
 
         var menu = new Forms.ContextMenuStrip();
         menu.Items.AddRange([
             open,
+            _update,
             new Forms.ToolStripSeparator(),
             _statusRate, _statusBattery, _statusCharger,
             new Forms.ToolStripSeparator(),
-            _showWatts, _closeToTray, _startWithWindows,
+            _showWatts, _closeToTray, _startWithWindows, checkUpdates,
             new Forms.ToolStripSeparator(),
             exit,
         ]);
@@ -64,6 +74,7 @@ internal sealed class TrayIcon : IDisposable
 
         _icon = new Forms.NotifyIcon { Icon = _appIcon, Text = "PowerLens", ContextMenuStrip = menu };
         _icon.MouseClick += (_, e) => { if (e.Button == Forms.MouseButtons.Left) OpenRequested?.Invoke(); };
+        _icon.BalloonTipClicked += (_, _) => OpenRequested?.Invoke();
         SyncChecks();
     }
 
@@ -71,6 +82,19 @@ internal sealed class TrayIcon : IDisposable
     {
         get => _icon.Visible;
         set => _icon.Visible = value;
+    }
+
+    /// <summary>Shows the "Update to …" menu item and, once per version, a notification.</summary>
+    public void ShowUpdate(ReleaseInfo? release)
+    {
+        _update.Visible = release is not null;
+        if (release is null) return;
+        string version = UpdateChecker.Display(release.Version);
+        _update.Text = $"Update to {version}…";
+        if (_announcedVersion == version || !_icon.Visible) return;
+        _announcedVersion = version;
+        _icon.ShowBalloonTip(8000, "PowerLens update available",
+            $"Version {version} is ready. Open PowerLens to install it.", Forms.ToolTipIcon.Info);
     }
 
     public void Update(PowerSnapshot s)

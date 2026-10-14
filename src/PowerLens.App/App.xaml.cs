@@ -9,7 +9,8 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
-        _instance = new SingleInstance();
+        bool afterUpdate = e.Args.Contains(Updater.AfterUpdateArgument);
+        _instance = new SingleInstance(waitForPrevious: afterUpdate);
         if (!_instance.IsFirst)
         {
             SingleInstance.ActivateExisting();
@@ -29,6 +30,9 @@ public partial class App : Application
         if (!startInTray) window.ShowFromTray();
 
         _instance.ListenForActivation(() => Dispatcher.BeginInvoke(window.ShowFromTray));
+
+        // Remove the previous version's files once it has fully exited.
+        _ = Task.Delay(TimeSpan.FromSeconds(afterUpdate ? 5 : 30)).ContinueWith(_ => Updater.CleanUp(), TaskScheduler.Default);
     }
 
     protected override void OnExit(ExitEventArgs e)

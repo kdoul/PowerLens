@@ -15,12 +15,29 @@
     <Grid Margin="16,8,16,16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="2*" MinHeight="200" />
             <RowDefinition Height="3*" MinHeight="240" />
         </Grid.RowDefinitions>
 
+        <!-- Update available -->
+        <Border x:Name="UpdateBar" Style="{StaticResource Card}" Padding="16,10" Margin="0,0,0,12" Visibility="Collapsed"
+                BorderBrush="{DynamicResource Accent}">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="UpdateNowButton" Content="Update now" Style="{StaticResource GlassButton}" Click="OnUpdateNow" />
+                    <Button Content="What's new" Style="{StaticResource GlassButton}" Click="OnReleaseNotes" />
+                    <Button x:Name="UpdateLaterButton" Content="Later" Style="{StaticResource GlassButton}" Margin="0" Click="OnUpdateLater" />
+                </StackPanel>
+                <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+                    <TextBlock x:Name="UpdateBarText" FontWeight="SemiBold" TextWrapping="Wrap" />
+                    <ProgressBar x:Name="UpdateBarProgress" Style="{StaticResource SlimProgress}" Maximum="1" Margin="0,6,0,0" Visibility="Collapsed" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
         <!-- Header cards -->
-        <Grid Margin="0,0,0,12">
+        <Grid Grid.Row="1" Margin="0,0,0,12">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="62*" />
                 <ColumnDefinition Width="38*" />
@@ -50,13 +67,13 @@
         </Grid>
 
         <!-- Live chart -->
-        <Border Grid.Row="1" Style="{StaticResource Card}" Padding="12,10" Margin="0,0,0,12">
+        <Border Grid.Row="2" Style="{StaticResource Card}" Padding="12,10" Margin="0,0,0,12">
             <controls:PowerChartView x:Name="Chart" />
         </Border>
 
         <!-- Tabs -->
-        <Border Grid.Row="2" Style="{StaticResource Card}" Padding="12">
-            <TabControl Style="{StaticResource PillTabs}">
+        <Border Grid.Row="3" Style="{StaticResource Card}" Padding="12">
+            <TabControl x:Name="Tabs" Style="{StaticResource PillTabs}">
                 <TabItem Header="Charger">
                     <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                         <ItemsControl x:Name="ChargerRows" ItemTemplate="{StaticResource RowGroupTemplate}" Focusable="False" />
@@ -93,7 +110,7 @@
                         </ScrollViewer>
                     </DockPanel>
                 </TabItem>
-                <TabItem Header="Settings">
+                <TabItem x:Name="SettingsTab" Header="Settings">
                     <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                         <StackPanel Margin="10,6" MaxWidth="680" HorizontalAlignment="Left">
                             <CheckBox x:Name="SettingTray" Style="{StaticResource ToggleSwitch}" Click="OnSettingChanged">
@@ -120,6 +137,16 @@
                                     <TextBlock Text="Starts quietly in the tray when you sign in (or as a window if the tray icon is off)." Style="{StaticResource SettingHint}" />
                                 </StackPanel>
                             </CheckBox>
+                            <CheckBox x:Name="SettingUpdates" Style="{StaticResource ToggleSwitch}" Click="OnSettingChanged">
+                                <StackPanel>
+                                    <TextBlock Text="Check for updates automatically" Style="{StaticResource SettingTitle}" />
+                                    <TextBlock Text="Asks GitHub about once a day whether a newer release exists. Nothing about your PC is sent." Style="{StaticResource SettingHint}" />
+                                </StackPanel>
+                            </CheckBox>
+                            <StackPanel Orientation="Horizontal" Margin="54,0,0,0">
+                                <Button x:Name="CheckUpdatesButton" Content="Check now" Style="{StaticResource GlassButton}" Click="OnCheckUpdates" />
+                                <TextBlock x:Name="UpdateStatus" VerticalAlignment="Center" Foreground="{DynamicResource TextMuted}" TextWrapping="Wrap" />
+                            </StackPanel>
                         </StackPanel>
                     </ScrollViewer>
                 </TabItem>

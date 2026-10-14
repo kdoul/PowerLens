@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.0 — 2026-10-14
+
+- **Updates:** PowerLens checks GitHub for new releases about once a day and shows a bar when one is
+  available. "Update now" downloads the package for your PC, verifies its SHA-256 checksum against the
+  release, replaces the executables and restarts. Turn automatic checks off or check manually in
+  Settings; the tray menu has "Check for updates" and "Update to …" too.
+
 ## 0.1.1 — 2026-10-14
 
 - The power adapter tile now leads with the likely charger rating (e.g. "60 W") instead of the
