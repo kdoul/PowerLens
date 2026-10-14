@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PowerLens — battery & USB-C charger inspector for Windows</title>
+  <meta name="description" content="PowerLens is a free, open-source battery and charger inspector for Windows 10 and 11. See battery health, cycle count and live power, and find out how many watts your USB-C charger really delivers.">
+  <meta property="og:title" content="PowerLens — battery & USB-C charger inspector for Windows">
+  <meta property="og:description" content="Battery health, cycle count, live power, and an honest measurement of your USB-C charger's wattage.">
+  <meta property="og:image" content="https://kdoul.github.io/PowerLens/icon.png">
+  <link rel="icon" href="favicon.png" type="image/png">
+  <style>
+    :root {
+      --bg: #f4f6f6;
+      --bg-blob-1: rgba(45, 212, 191, .32);
+      --bg-blob-2: rgba(110, 231, 168, .30);
+      --bg-blob-3: rgba(14, 116, 144, .18);
+      --surface: rgba(255, 255, 255, .62);
+      --surface-strong: rgba(255, 255, 255, .86);
+      --border: rgba(15, 23, 42, .08);
+      --text: #17191c;
+      --muted: #5b616b;
+      --accent: #0d9488;
+      --accent-hover: #0f766e;
+      --accent-text: #ffffff;
+      --green: #16a34a;
+      --blue: #2563eb;
+      --code-bg: rgba(15, 23, 42, .06);
+      --shadow: 0 1px 2px rgba(15, 23, 42, .05), 0 12px 32px rgba(15, 23, 42, .07);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #111315;
+        --bg-blob-1: rgba(45, 212, 191, .20);
+        --bg-blob-2: rgba(74, 222, 128, .12);
+        --bg-blob-3: rgba(14, 116, 144, .25);
+        --surface: rgba(32, 34, 37, .58);
+        --surface-strong: rgba(38, 41, 44, .86);
+        --border: rgba(255, 255, 255, .09);
+        --text: #f3f4f5;
+        --muted: #a3a8b0;
+        --accent: #2dd4bf;
+        --accent-hover: #5eead4;
+        --accent-text: #062a26;
+        --green: #4ade80;
+        --blue: #60a5fa;
+        --code-bg: rgba(255, 255, 255, .07);
+        --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 12px 32px rgba(0, 0, 0, .35);
+      }
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      color: var(--text);
+      background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: -20vmax;
+      z-index: -1;
+      background:
+        radial-gradient(40vmax 40vmax at 15% 10%, var(--bg-blob-1), transparent 60%),
+        radial-gradient(35vmax 35vmax at 85% 20%, var(--bg-blob-2), transparent 60%),
+        radial-gradient(45vmax 45vmax at 60% 95%, var(--bg-blob-3), transparent 60%);
+      filter: blur(20px);
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { color: var(--accent-hover); }
+    code {
+      font-family: "Cascadia Code", "Cascadia Mono", Consolas, ui-monospace, monospace;
+      font-size: .9em;
+      background: var(--code-bg);
+      padding: .1em .4em;
+      border-radius: 5px;
+    }
+    .wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+
+    /* Navigation */
+    nav {
+      position: sticky; top: 0; z-index: 10;
+      backdrop-filter: blur(20px) saturate(1.4);
+      -webkit-backdrop-filter: blur(20px) saturate(1.4);
+      background: color-mix(in srgb, var(--bg) 70%, transparent);
+      border-bottom: 1px solid var(--border);
+    }
+    nav .wrap { display: flex; align-items: center; gap: 24px; height: 60px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--text); font-size: 17px; }
+    .brand img { width: 28px; height: 28px; }
+    nav .links { margin-left: auto; display: flex; gap: 22px; font-size: 15px; }
+    nav .links a { color: var(--muted); }
+    nav .links a:hover { color: var(--text); }
+
+    /* Hero */
+    .hero { display: grid; grid-template-columns: 1.05fr 1fr; gap: 48px; align-items: center; padding-block: 72px 56px; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--accent);
+      background: var(--surface); border: 1px solid var(--border); padding: 4px 12px; border-radius: 999px; }
+    h1 { font-family: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif; font-size: clamp(36px, 5.2vw, 56px);
+      line-height: 1.08; letter-spacing: -0.02em; margin: 18px 0 16px; font-weight: 650; }
+    .lede { font-size: 19px; color: var(--muted); margin: 0 0 28px; max-width: 34em; }
+    .cta { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px;
+      padding: 11px 20px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--surface-strong); color: var(--text); transition: transform .12s ease, background .12s ease;
+    }
+    .btn:hover { color: var(--text); transform: translateY(-1px); }
+    .btn.primary { background: var(--accent); color: var(--accent-text); border-color: transparent; }
+    .btn.primary:hover { background: var(--accent-hover); color: var(--accent-text); }
+    .btn svg { width: 18px; height: 18px; flex: none; }
+    .meta { margin-top: 16px; font-size: 14px; color: var(--muted); }
+    .meta a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+
+    /* App illustration */
+    .window {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow);
+      backdrop-filter: blur(24px) saturate(1.3); -webkit-backdrop-filter: blur(24px) saturate(1.3);
+      overflow: hidden;
+    }
+    .titlebar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; font-size: 12px; color: var(--muted); }
+    .titlebar img { width: 16px; height: 16px; }
+    .titlebar .ctl { margin-left: auto; display: flex; gap: 18px; letter-spacing: 2px; }
+    .panes { display: grid; grid-template-columns: 1.4fr 1fr; gap: 10px; padding: 4px 12px 12px; }
+    .card { background: var(--surface-strong); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+    .card .cap { font-size: 10px; font-weight: 700; letter-spacing: .06em; color: var(--muted); }
+    .card .big { font-family: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif; font-size: 30px; font-weight: 650; line-height: 1.2; }
+    .card .sub { font-size: 12px; }
+    .card .tiny { font-size: 11px; color: var(--muted); }
+    .pill { display: inline-block; margin-top: 8px; font-size: 11px; font-weight: 700; color: #fff; background: #16a34a; padding: 2px 9px; border-radius: 999px; }
+    .level { height: 5px; border-radius: 3px; background: var(--code-bg); margin: 4px 0 8px; overflow: hidden; }
+    .level span { display: block; height: 100%; width: 76%; background: var(--accent); border-radius: 3px; }
+    .chart { grid-column: 1 / -1; padding: 10px 12px 6px; }
+    .chart svg { width: 100%; height: auto; display: block; }
+    .caption-note { text-align: center; font-size: 12px; color: var(--muted); margin-top: 10px; }
+
+    /* Sections */
+    section { padding: 56px 0; }
+    h2 { font-family: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif; font-size: clamp(26px, 3.4vw, 34px);
+      letter-spacing: -0.015em; margin: 0 0 10px; font-weight: 650; }
+    .section-lede { color: var(--muted); margin: 0 0 32px; max-width: 46em; font-size: 17px; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .tile {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px;
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    }
+    .tile h3 { margin: 12px 0 6px; font-size: 17px; font-weight: 600; }
+    .tile p { margin: 0; color: var(--muted); font-size: 15px; }
+    .icon-chip { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center;
+      background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
+    .icon-chip svg { width: 20px; height: 20px; }
+
+    .steps { counter-reset: step; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .steps .tile { position: relative; padding-top: 52px; }
+    .steps .tile::before {
+      counter-increment: step; content: counter(step);
+      position: absolute; top: 18px; left: 22px; width: 26px; height: 26px; border-radius: 50%;
+      display: grid; place-items: center; font-size: 13px; font-weight: 700;
+      background: var(--accent); color: var(--accent-text);
+    }
+
+    .callout {
+      margin-top: 16px; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent);
+      border-radius: 10px; padding: 16px 20px; color: var(--muted); font-size: 15px;
+    }
+    .callout strong { color: var(--text); }
+
+    .download { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .download .tile { display: flex; flex-direction: column; gap: 10px; }
+    .download .tile .btn { align-self: flex-start; margin-top: 6px; }
+    ol.plain { margin: 0; padding-left: 20px; color: var(--muted); font-size: 15px; }
+    ol.plain li { margin: 4px 0; }
+
+    details { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; margin-bottom: 10px; }
+    summary { cursor: pointer; font-weight: 600; list-style: none; display: flex; justify-content: space-between; gap: 16px; }
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: "+"; color: var(--muted); font-weight: 400; font-size: 20px; line-height: 1; }
+    details[open] summary::after { content: "–"; }
+    details p { color: var(--muted); margin: 10px 0 2px; font-size: 15px; }
+
+    footer { padding: 40px 0 56px; color: var(--muted); font-size: 14px; border-top: 1px solid var(--border); margin-top: 24px; }
+    footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; }
+    footer .brand { font-size: 15px; }
+    footer .right { margin-left: auto; display: flex; gap: 20px; }
+
+    @media (max-width: 860px) {
+      .hero { grid-template-columns: 1fr; padding-top: 48px; gap: 36px; }
+      h1 br { display: none; }
+      .grid, .steps { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 600px) {
+      nav .links a:not(.gh) { display: none; }
+      .grid, .steps, .download { grid-template-columns: 1fr; }
+      .panes { grid-template-columns: 1fr; }
+      .lede { font-size: 17px; }
+      footer .right { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="#"><img src="icon.png" alt="">PowerLens</a>
+    <div class="links">
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a href="#download">Download</a>
+      <a class="gh" href="https://github.com/kdoul/PowerLens">GitHub</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <div class="wrap hero">
+    <div>
+      <span class="eyebrow">Free &amp; open source · Windows 10 &amp; 11</span>
+      <h1>See what your <span style="white-space:nowrap">USB-C</span> charger really delivers.</h1>
+      <p class="lede">PowerLens shows your laptop battery's health, cycle count and live power, and measures how many watts your charger is actually supplying. Think coconutBattery, for Windows.</p>
+      <div class="cta">
+        <a class="btn primary" href="https://github.com/kdoul/PowerLens/releases/latest/download/PowerLens-win-x64.zip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+          Download for Windows
+        </a>
+        <a class="btn" href="https://github.com/kdoul/PowerLens">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5A11.5 11.5 0 0 0 8.36 22.9c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.38-3.88-1.38-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.7 5.4-5.26 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z"/></svg>
+          View source
+        </a>
+      </div>
+      <p class="meta"><span id="version">Latest release</span> · <a href="https://github.com/kdoul/PowerLens/releases/latest/download/PowerLens-win-arm64.zip">ARM64 build</a> · No install, no admin rights</p>
+    </div>
+
+    <div>
+      <div class="window" aria-label="Illustration of the PowerLens window">
+        <div class="titlebar"><img src="icon.png" alt="">PowerLens — battery &amp; charger<span class="ctl">–&nbsp;▢&nbsp;✕</span></div>
+        <div class="panes">
+          <div class="card">
+            <div class="cap">POWER ADAPTER</div>
+            <div class="big">41.6 W</div>
+            <div class="sub">Being delivered now, consistent with a 45 W charger or larger</div>
+            <div class="tiny">Peak 43.2 W · Medium confidence</div>
+            <span class="pill">Charging</span>
+          </div>
+          <div class="card">
+            <div class="cap">BATTERY</div>
+            <div class="big">76 %</div>
+            <div class="level"><span></span></div>
+            <div class="sub">Charging at 29.4 W</div>
+            <div class="tiny">Health 92 % · 214 cycles</div>
+          </div>
+          <div class="card chart">
+            <svg viewBox="0 0 400 110" role="img" aria-label="Power over the last 10 minutes">
+              <rect x="150" y="6" width="250" height="88" fill="var(--accent)" opacity=".10"/>
+              <g stroke="var(--border)" stroke-width="1">
+                <line x1="0" y1="20" x2="400" y2="20"/><line x1="0" y1="50" x2="400" y2="50"/><line x1="0" y1="80" x2="400" y2="80"/>
+              </g>
+              <polyline fill="none" stroke="var(--green)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"
+                points="0,86 20,87 40,85 60,88 80,86 100,87 120,86 140,87"/>
+              <polyline fill="none" stroke="var(--green)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"
+                points="155,50 175,40 195,38 215,37 235,38 255,36 275,37 295,38 315,37 335,38 355,39 375,38 395,39"/>
+              <polyline fill="none" stroke="var(--blue)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"
+                points="155,34 175,25 195,23 215,22 235,23 255,21 275,22 295,23 315,22 335,23 355,24 375,23 395,24"/>
+              <text x="0" y="106" font-size="9" fill="var(--muted)">−10 min</text>
+              <text x="380" y="106" font-size="9" fill="var(--muted)">now</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+      <p class="caption-note">Illustration. On Windows 11 the real window uses the acrylic backdrop and follows your theme.</p>
+    </div>
+  </div>
+
+  <section id="features">
+    <div class="wrap">
+      <h2>Everything about your power, in one place</h2>
+      <p class="section-lede">PowerLens reads the same battery interfaces Windows uses for its own battery report. It works without admin rights and without installing anything.</p>
+      <div class="grid">
+        <div class="tile">
+          <div class="icon-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/></svg></div>
+          <h3>Charger wattage</h3>
+          <p>Shows the negotiated USB-C contract when your laptop exposes it. Otherwise it measures the power coming in and matches it to standard charger ratings.</p>
+        </div>
+        <div class="tile">
+          <div class="icon-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="17" height="10" rx="2.5"/><path d="M22 11v2"/><path d="M6 11v2M10 11v2"/></svg></div>
+          <h3>Battery health</h3>
+          <p>Design vs. full-charge capacity, cycle count, voltage, current, temperature, chemistry, manufacturer and manufacture date.</p>
+        </div>
+        <div class="tile">
+          <div class="icon-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 15 4-5 3 3 5-7"/></svg></div>
+          <h3>Live power chart</h3>
+          <p>Battery power and charger output over the last ten minutes, with plugged-in periods highlighted.</p>
+        </div>
+        <div class="tile">
+          <div class="icon-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/><path d="M11 8v3l2 2"/></svg></div>
+          <h3>Adapter test</h3>
+          <p>A guided one-minute measurement: unplug, plug back in, and get the most accurate charger estimate your hardware allows.</p>
+        </div>
+        <div class="tile">
+          <div class="icon-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="14" width="18" height="7" rx="2"/><path d="M15 17.5h3"/><path d="M12 3v7"/><path d="m9 7 3 3 3-3"/></svg></div>
+          <h3>Tray icon</h3>
+          <p>Optional live watts in the notification area, colour-coded for charging, discharging or a charger that's too weak.</p>
+        </div>
+        <div class="tile">
+          <div class="icon-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m6 9 3 3-3 3"/><path d="M12 15h5"/></svg></div>
+          <h3>Command line</h3>
+          <p><code>powerlens-cli</code> prints a full report, JSON with <code>--json</code>, or a live line every two seconds with <code>--watch</code>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="wrap">
+      <h2>How PowerLens measures your charger</h2>
+      <p class="section-lede">Windows has no public way for apps to read the wattage your laptop agreed with the charger, so PowerLens works it out from what Windows does expose.</p>
+      <div class="steps">
+        <div class="tile">
+          <h3>Ask the hardware first</h3>
+          <p>Some laptops publish the charger contract through the battery driver or the manufacturer's tools. When they do, PowerLens shows it directly, e.g. 20 V × 3.25 A = 65 W.</p>
+        </div>
+        <div class="tile">
+          <h3>Measure the power flow</h3>
+          <p>On battery, the discharge rate is your system's load. Plugged in, the charger supplies that load plus the battery's charging power plus conversion losses.</p>
+        </div>
+        <div class="tile">
+          <h3>Match a charger rating</h3>
+          <p>The measured power is matched to the smallest standard USB-C charger that could deliver it, such as 30, 45, 65 or 100 W.</p>
+        </div>
+      </div>
+      <div class="callout">
+        <strong>The measured figure is a minimum.</strong> Laptops limit how much power they take, and charging slows above about 80 %. Your charger is rated at least as high as PowerLens measures, never lower. For the best reading, run the Adapter test below 80 % battery with the laptop idle.
+      </div>
+    </div>
+  </section>
+
+  <section id="download">
+    <div class="wrap">
+      <h2>Get PowerLens</h2>
+      <p class="section-lede">A single portable app. Unzip it anywhere and run it; uninstalling is just deleting the folder.</p>
+      <div class="download">
+        <div class="tile">
+          <h3>Download</h3>
+          <ol class="plain">
+            <li>Download the zip for your PC.</li>
+            <li>Right-click it → <strong>Extract All</strong>.</li>
+            <li>Run <code>PowerLens.exe</code>.</li>
+          </ol>
+          <div class="cta">
+            <a class="btn primary" href="https://github.com/kdoul/PowerLens/releases/latest/download/PowerLens-win-x64.zip">Intel / AMD (x64)</a>
+            <a class="btn" href="https://github.com/kdoul/PowerLens/releases/latest/download/PowerLens-win-arm64.zip">ARM64</a>
+          </div>
+          <p class="tiny" style="color:var(--muted);font-size:14px;margin:0">Not sure? Most PCs are x64. Snapdragon laptops are ARM64. All releases and checksums are on the <a href="https://github.com/kdoul/PowerLens/releases">releases page</a>.</p>
+        </div>
+        <div class="tile">
+          <h3>"Windows protected your PC"?</h3>
+          <p>PowerLens isn't code-signed yet, so Microsoft Defender SmartScreen may warn the first time you open it. Click <strong>More info → Run anyway</strong>. The source code and the build that produced each download are public on GitHub.</p>
+          <h3>Build it yourself</h3>
+          <p>With the .NET 10 SDK installed: <code>git clone https://github.com/kdoul/PowerLens</code>, then <code>dotnet run --project src/PowerLens.App</code>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq">
+    <div class="wrap">
+      <h2>Questions</h2>
+      <details>
+        <summary>Does it need admin rights?</summary>
+        <p>No. Battery data comes from the standard battery driver interface and WMI, which any user can read.</p>
+      </details>
+      <details>
+        <summary>Why is the charger wattage sometimes an estimate?</summary>
+        <p>Your laptop negotiates power with the charger in its own firmware, and Windows uses the result only internally. When the driver or the manufacturer's software exposes the contract, PowerLens shows it. Otherwise it measures the power actually flowing in.</p>
+      </details>
+      <details>
+        <summary>How does Windows decide a charger is "slow"?</summary>
+        <p>Windows doesn't measure it. The laptop's controller compares the agreed charger power with what the machine needs and flags the connection as slow or not charging; Windows only shows the notification. That flag isn't available to apps, so PowerLens gives its own verdict: <strong>Charging slowly</strong> under 20 W delivered, or <strong>Charger too weak</strong> when the battery drains while plugged in.</p>
+      </details>
+      <details>
+        <summary>Which Windows versions are supported?</summary>
+        <p>Windows 10 and 11, on x64 and ARM64. The acrylic window style needs Windows 11 22H2 or later; older versions use solid colours.</p>
+      </details>
+      <details>
+        <summary>Does it work on desktop PCs?</summary>
+        <p>It runs, but without a battery there's nothing to measure. PowerLens is made for laptops and tablets.</p>
+      </details>
+      <details>
+        <summary>Does it send any data anywhere?</summary>
+        <p>No. PowerLens makes no network connections. Everything stays on your PC.</p>
+      </details>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span class="brand"><img src="icon.png" alt="" style="width:22px;height:22px">PowerLens</span>
+    <span>MIT licensed · by <a href="https://github.com/kdoul">Konstantinos Douloudis</a></span>
+    <span class="right">
+      <a href="https://github.com/kdoul/PowerLens">Source</a>
+      <a href="https://github.com/kdoul/PowerLens/releases">Releases</a>
+      <a href="https://github.com/kdoul/PowerLens/issues">Report an issue</a>
+    </span>
+  </div>
+</footer>
+
+<script>
+  // Show the latest version number; the download links work without this.
+  fetch("https://api.github.com/repos/kdoul/PowerLens/releases/latest")
+    .then(r => r.ok ? r.json() : null)
+    .then(release => {
+      if (!release) return;
+      const date = new Date(release.published_at).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+      document.getElementById("version").textContent = `${release.tag_name} · ${date}`;
+    })
+    .catch(() => {});
+</script>
+</body>
+</html>

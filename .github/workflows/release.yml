@@ -1,0 +1,80 @@
+name: Release
+
+# Push a tag like v0.2.0 to build Windows x64 + ARM64 packages and publish a GitHub release.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        rid: [win-x64, win-arm64]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Test
+        if: matrix.rid == 'win-x64'
+        run: dotnet test tests/PowerLens.Core.Tests -c Release
+
+      - name: Publish
+        shell: pwsh
+        run: |
+          $version = '${{ github.ref_name }}'.TrimStart('v')
+          # Self-contained single file, pre-compiled (ReadyToRun) and uncompressed so it starts quickly.
+          $common = @(
+            '-c', 'Release', '-r', '${{ matrix.rid }}', '--self-contained',
+            '-p:PublishSingleFile=true', '-p:IncludeNativeLibrariesForSelfExtract=true',
+            '-p:PublishReadyToRun=true', '-p:DebugType=none', "-p:Version=$version"
+          )
+          dotnet publish src/PowerLens.App @common -o out/app
+          dotnet publish src/PowerLens.Cli @common -o out/cli
+
+          New-Item -ItemType Directory -Force dist/PowerLens | Out-Null
+          Copy-Item out/app/PowerLens.exe, out/cli/powerlens-cli.exe, LICENSE, README.md -Destination dist/PowerLens/
+          Compress-Archive -Path dist/PowerLens/* -DestinationPath "PowerLens-${{ matrix.rid }}.zip"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: PowerLens-${{ matrix.rid }}
+          path: PowerLens-${{ matrix.rid }}.zip
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          (cd dist && sha256sum *.zip > SHA256SUMS.txt)
+
+          # Release notes: this version's section of CHANGELOG.md, plus install hints.
+          awk -v v="$version" '$0 ~ "^## "v" " {on=1; next} /^## / {on=0} on' CHANGELOG.md > notes.md
+          cat >> notes.md <<'NOTES'
+
+          ### Download
+          - **PowerLens-win-x64.zip** — most Windows PCs (Intel / AMD)
+          - **PowerLens-win-arm64.zip** — Snapdragon / ARM laptops
+
+          Unzip and run `PowerLens.exe`. No installation or admin rights needed.
+          The app isn't code-signed yet, so SmartScreen may warn on first launch: choose **More info → Run anyway**.
+          NOTES
+
+          gh release create "$GITHUB_REF_NAME" dist/* --title "PowerLens $version" --notes-file notes.md --verify-tag

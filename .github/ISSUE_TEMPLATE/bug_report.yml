@@ -1,0 +1,34 @@
+name: Bug report
+description: Something doesn't work or shows wrong numbers
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you expected, and what PowerLens showed instead.
+    validations:
+      required: true
+  - type: input
+    id: laptop
+    attributes:
+      label: Laptop model
+      placeholder: e.g. Dell XPS 13 9340
+    validations:
+      required: true
+  - type: input
+    id: charger
+    attributes:
+      label: Charger (rated wattage and model)
+      placeholder: e.g. Anker 65 W USB-C PD
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      placeholder: e.g. Windows 11 24H2 (26100.2033)
+  - type: textarea
+    id: report
+    attributes:
+      label: PowerLens report
+      description: In PowerLens, open Raw data → Copy report and paste it here. Remove the serial number if you prefer.
+      render: text

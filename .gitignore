@@ -8,3 +8,4 @@ publish/
 *.suo
 TestResults/
 .DS_Store
+.claude/

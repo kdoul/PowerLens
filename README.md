@@ -1,10 +1,41 @@
-# PowerLens
+<p align="center">
+  <img src="docs/icon.png" width="96" alt="PowerLens icon">
+</p>
 
-A coconutBattery-style battery and charger inspector for Windows 10 and 11, focused on one question:
-**how many watts is my USB-C charger actually delivering?**
+<h1 align="center">PowerLens</h1>
 
-On Windows 11 22H2 and later the window uses the system **acrylic** backdrop and follows the light/dark
-theme. Earlier versions get solid colours.
+<p align="center">
+  Battery and USB-C charger inspector for Windows 10 and 11.<br>
+  <b>How many watts is my charger actually delivering?</b>
+</p>
+
+<p align="center">
+  <a href="https://github.com/kdoul/PowerLens/releases/latest"><img src="https://img.shields.io/github/v/release/kdoul/PowerLens?label=download" alt="Latest release"></a>
+  <a href="https://github.com/kdoul/PowerLens/actions/workflows/ci.yml"><img src="https://github.com/kdoul/PowerLens/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/kdoul/PowerLens" alt="MIT license"></a>
+</p>
+
+<p align="center">
+  <a href="https://kdoul.github.io/PowerLens/">Website</a> ·
+  <a href="https://github.com/kdoul/PowerLens/releases/latest/download/PowerLens-win-x64.zip">Download (x64)</a> ·
+  <a href="https://github.com/kdoul/PowerLens/releases/latest/download/PowerLens-win-arm64.zip">Download (ARM64)</a>
+</p>
+
+Think coconutBattery, for Windows. PowerLens shows your battery's health, cycle count and live power, and
+measures how much power your USB-C charger is supplying. On Windows 11 22H2 and later the window uses
+the system **acrylic** backdrop and follows the light/dark theme; earlier versions get solid colours.
+
+## Install
+
+1. Download **PowerLens-win-x64.zip** (Intel/AMD) or **PowerLens-win-arm64.zip** (Snapdragon/ARM) from the
+   [latest release](https://github.com/kdoul/PowerLens/releases/latest).
+2. Extract it and run `PowerLens.exe`. Nothing is installed, and no admin rights are needed.
+
+PowerLens isn't code-signed yet, so SmartScreen may show "Windows protected your PC" on first launch.
+Choose **More info → Run anyway**. Every release is built from this repository by
+[GitHub Actions](.github/workflows/release.yml), with SHA-256 checksums attached.
+
+## Features
 
 - **Charger card:** the reported charger rating when Windows exposes it. Otherwise, an estimate of the
   power coming from the charger now, the peak since it was plugged in, and the smallest standard
@@ -44,9 +75,8 @@ Windows has **no public user-mode API for the USB-PD contract**. Your laptop neg
 in its embedded controller (UCSI), and Windows only uses it internally, for example for the
 "slow charger" notification. PowerLens shows a hard number only in these cases:
 
-1. The battery driver implements the charger-status IOCTL levels. This is common on
-   Windows-on-ARM devices and devices that use the Windows charging stack, but rare on x86 ACPI
-   laptops.
+1. The battery driver implements the charger-status IOCTL levels. Some devices built on the Windows
+   charging stack do; most x86 ACPI laptops don't.
 2. An OEM tool publishes it in WMI. For example, Dell Command | Monitor publishes it in
    `root\dcim\sysman`.
 
@@ -70,9 +100,14 @@ flag into the "Slow charger" / "PC isn't charging" notification. No public user-
 flag, so PowerLens shows its own verdict from measured power: **Charging slowly** (under 20 W
 delivered) or **Charger too weak** (the battery drains while plugged in).
 
-## Build
+## Privacy
 
-You need the [.NET 10 SDK](https://dotnet.microsoft.com/download). It builds on Windows, macOS, or Linux (`EnableWindowsTargeting`).
+PowerLens makes no network connections. Settings are stored locally in `%APPDATA%\PowerLens`.
+
+## Build from source
+
+You need the [.NET 10 SDK](https://dotnet.microsoft.com/download). It builds on Windows, macOS, or Linux
+(`EnableWindowsTargeting`), but only runs on Windows.
 
 ```bash
 dotnet test
@@ -85,14 +120,26 @@ dotnet run --project src/PowerLens.App
 Single-file, self-contained executables (no .NET install needed on the target PC):
 
 ```bash
-dotnet publish src/PowerLens.App -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -o publish/app
+dotnet publish src/PowerLens.App -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:PublishReadyToRun=true -o publish/app
 ```
 
 ```bash
-dotnet publish src/PowerLens.Cli -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o publish/cli
+dotnet publish src/PowerLens.Cli -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:PublishReadyToRun=true -o publish/cli
 ```
 
 For Snapdragon / ARM64 Windows laptops, use `-r win-arm64`.
+
+## Releasing
+
+Releases are automated. Add the version's notes to [CHANGELOG.md](CHANGELOG.md), then push a tag:
+
+```bash
+git tag v0.2.0 && git push origin v0.2.0
+```
+
+The [release workflow](.github/workflows/release.yml) runs the tests, builds x64 and ARM64 packages,
+and publishes a GitHub release with the changelog section as notes. The website in [`docs/`](docs/)
+deploys to GitHub Pages on every push to `main` that touches it.
 
 ## Layout
 
@@ -102,4 +149,9 @@ src/PowerLens.App    WPF UI with acrylic backdrop and tray icon (net10.0-windows
 src/PowerLens.Cli    console report / --json / --watch (net10.0-windows)
 tests/               xUnit tests for decoding and estimation logic (run on any OS)
 tools/IconGen        renders the app icon (SkiaSharp): dotnet run --project tools/IconGen
+docs/                GitHub Pages website
 ```
+
+## License
+
+[MIT](LICENSE) © Konstantinos Douloudis
