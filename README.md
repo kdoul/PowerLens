@@ -59,7 +59,6 @@ Choose **More info → Run anyway**. Every release is built from this repository
   settings: watts in the icon, close-to-tray, and Start with Windows.
 - **Settings tab:** the same options. Settings are saved to `%APPDATA%\PowerLens\settings.json`.
   Start with Windows uses the per-user Run key and launches into the tray with `--tray`.
-- **Single instance:** launching PowerLens again brings the running window to the front.
 - **Updates:** checks GitHub releases daily (optional) and updates itself in place after verifying the
   download's SHA-256 checksum. Also available from the tray menu.
 - **CLI** (`powerlens-cli`): text report, `--json`, or `--watch` for a live line every 2 s.
