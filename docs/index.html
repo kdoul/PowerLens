@@ -101,13 +101,14 @@
     nav .links a:hover { color: var(--text); }
 
     /* Hero */
-    .hero { display: grid; grid-template-columns: 1.05fr 1fr; gap: 48px; align-items: center; padding-block: 72px 56px; }
+    .hero { padding-block: 72px 24px; text-align: center; }
     .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--accent);
       background: var(--surface); border: 1px solid var(--border); padding: 4px 12px; border-radius: 999px; }
     h1 { font-family: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif; font-size: clamp(36px, 5.2vw, 56px);
       line-height: 1.08; letter-spacing: -0.02em; margin: 18px 0 16px; font-weight: 650; }
-    .lede { font-size: 19px; color: var(--muted); margin: 0 0 28px; max-width: 34em; }
+    .lede { font-size: 19px; color: var(--muted); margin: 0 auto 28px; max-width: 36em; }
     .cta { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    .hero .cta { justify-content: center; }
     .btn {
       display: inline-flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px;
       padding: 11px 20px; border-radius: 8px; border: 1px solid var(--border);
@@ -120,8 +121,19 @@
     .meta { margin-top: 16px; font-size: 14px; color: var(--muted); }
     .meta a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
 
-    /* Screenshot */
-    .shot { display: block; width: 100%; height: auto; border-radius: 12px; box-shadow: var(--shadow); }
+    /* Screenshot showcase */
+    .showcase { position: relative; max-width: 1000px; margin: 40px auto 0; }
+    .showcase::before {
+      content: ""; position: absolute; inset: 8% 6% -4%; z-index: -1; border-radius: 50%;
+      background: radial-gradient(closest-side, color-mix(in srgb, var(--accent) 45%, transparent), transparent);
+      filter: blur(40px); opacity: .55;
+    }
+    .showcase a { display: block; border-radius: 10px; }
+    .shot {
+      display: block; width: 100%; height: auto; border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, .12), 0 24px 64px rgba(0, 0, 0, .28);
+    }
+    .shot-hint { display: none; margin: 10px 0 0; font-size: 13px; color: var(--muted); text-align: center; }
 
     /* Sections */
     section { padding: 56px 0; }
@@ -173,7 +185,7 @@
     footer .right { margin-left: auto; display: flex; gap: 20px; }
 
     @media (max-width: 860px) {
-      .hero { grid-template-columns: 1fr; padding-top: 48px; gap: 36px; }
+      .hero { padding-top: 48px; }
       h1 br { display: none; }
       .grid, .steps { grid-template-columns: 1fr 1fr; }
     }
@@ -181,6 +193,8 @@
       nav .links a:not(.gh) { display: none; }
       .grid, .steps, .download { grid-template-columns: 1fr; }
       .lede { font-size: 17px; }
+      .showcase { margin-top: 32px; }
+      .shot-hint { display: block; }
       footer .right { margin-left: 0; }
     }
   </style>
@@ -201,7 +215,6 @@
 
 <main>
   <div class="wrap hero">
-    <div>
       <span class="eyebrow">Free &amp; open source · Windows 10 &amp; 11</span>
       <h1>See what your <span style="white-space:nowrap">USB-C</span> charger really delivers.</h1>
       <p class="lede">PowerLens shows your laptop battery's health, cycle count and live power, and measures how many watts your charger is actually supplying. Think coconutBattery, for Windows.</p>
@@ -216,11 +229,13 @@
         </a>
       </div>
       <p class="meta"><span id="version">Latest release</span> · <a href="https://github.com/kdoul/PowerLens/releases/latest/download/PowerLens-win-arm64.zip">ARM64 build</a> · No install, no admin rights</p>
-    </div>
 
-    <div>
-      <img class="shot" src="screenshot.webp" width="1574" height="982"
-           alt="PowerLens window on Windows 11 with the acrylic backdrop, showing the power adapter, battery, live chart and charger details">
+    <div class="showcase">
+      <a href="screenshot.webp" target="_blank" rel="noopener">
+        <img class="shot" src="screenshot.webp" width="1066" height="853"
+             alt="PowerLens window on Windows 11 with the acrylic backdrop, showing the power adapter, battery, live chart and charger details">
+      </a>
+      <p class="shot-hint">Tap the screenshot to see it full size.</p>
     </div>
   </div>
 
