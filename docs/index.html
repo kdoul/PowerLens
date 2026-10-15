@@ -3,14 +3,58 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PowerLens — battery & USB-C charger inspector for Windows</title>
-  <meta name="description" content="PowerLens is a free, open-source battery and charger inspector for Windows 10 and 11. See battery health, cycle count and live power, and find out how many watts your USB-C charger really delivers.">
-  <meta property="og:title" content="PowerLens — battery & USB-C charger inspector for Windows">
-  <meta property="og:description" content="Battery health, cycle count, live power, and an honest measurement of your USB-C charger's wattage.">
-  <meta property="og:image" content="https://getpowerlens.eu/screenshot.webp">
-  <meta property="og:url" content="https://getpowerlens.eu/">
+  <title>PowerLens — USB-C charger wattage &amp; battery health for Windows</title>
+  <meta name="description" content="Free, open-source app for Windows 10 and 11 that shows how many watts your USB-C charger really delivers, plus battery health, cycle count and live power.">
+  <meta name="author" content="Konstantinos Douloudis">
+  <meta name="application-name" content="PowerLens">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="theme-color" content="#0d9488" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#111315" media="(prefers-color-scheme: dark)">
   <link rel="canonical" href="https://getpowerlens.eu/">
   <link rel="icon" href="favicon.png" type="image/png">
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+  <!-- Social sharing (Open Graph: Facebook, LinkedIn, WhatsApp, Slack, Discord, …) -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="PowerLens">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:url" content="https://getpowerlens.eu/">
+  <meta property="og:title" content="PowerLens — see what your USB-C charger really delivers">
+  <meta property="og:description" content="Free, open-source Windows app: your charger's real wattage, battery health, cycle count and live power.">
+  <meta property="og:image" content="https://getpowerlens.eu/og-image.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="PowerLens: see what your USB-C charger really delivers. The app window shows the power adapter, battery and a live power chart.">
+
+  <!-- X / Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="PowerLens — see what your USB-C charger really delivers">
+  <meta name="twitter:description" content="Free, open-source Windows app: your charger's real wattage, battery health, cycle count and live power.">
+  <meta name="twitter:image" content="https://getpowerlens.eu/og-image.png">
+  <meta name="twitter:image:alt" content="PowerLens: see what your USB-C charger really delivers.">
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "PowerLens",
+    "url": "https://getpowerlens.eu/",
+    "description": "Free, open-source app for Windows 10 and 11 that shows how many watts your USB-C charger really delivers, plus battery health, cycle count and live power.",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Windows 10, Windows 11",
+    "image": "https://getpowerlens.eu/icon.png",
+    "screenshot": "https://getpowerlens.eu/screenshot.webp",
+    "downloadUrl": "https://github.com/kdoul/PowerLens/releases/latest",
+    "license": "https://opensource.org/licenses/MIT",
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+    "author": { "@type": "Person", "name": "Konstantinos Douloudis", "url": "https://github.com/kdoul" },
+    "codeRepository": "https://github.com/kdoul/PowerLens"
+  }
+  </script>
   <style>
     :root {
       --bg: #f4f6f6;
