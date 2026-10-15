@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <!-- Lets the Windows-only projects compile on macOS/Linux build machines too. -->
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
-    <Version>0.1.1</Version>
+    <Version>0.2.1</Version>
     <Product>PowerLens</Product>
     <Company>PowerLens</Company>
   </PropertyGroup>

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1 — 2026-10-15
+
+- Maintenance release: updated System.Management (used to read Windows battery data) to 10.0.13.
+- If you have 0.2.0, PowerLens offers this update itself: Settings → Check now, or wait for the
+  update bar.
+
 ## 0.2.0 — 2026-10-14
 
 - **Updates:** PowerLens checks GitHub for new releases about once a day and shows a bar when one is
